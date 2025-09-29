@@ -180,33 +180,64 @@ const exportPDF = () => {
     </template>
 
     <template #actions>
-      <v-select label="Producto" :items="productOptions" v-model="productId" style="min-width: 260px" hide-details />
-      <v-text-field class="ml-2" label="Desde" type="date"
-        :model-value="from? $dayjs(from).format('YYYY-MM-DD') : ''"
+      <div class="actions-row">
+        <v-select
+          label="Producto"
+          :items="productOptions"
+          v-model="productId"
+          hide-details
+          style="min-width: 260px"
+          density="comfortable"
+        />
+
+      <v-text-field
+        label="Desde"
+        type="date"
+        :model-value="from ? $dayjs(from).format('YYYY-MM-DD') : ''"
         @update:model-value="v => from = v ? $dayjs(v).toISOString() : null"
-        hide-details style="max-width: 170px;" />
-      <v-text-field class="ml-2" label="Hasta" type="date"
-        :model-value="to? $dayjs(to).format('YYYY-MM-DD') : ''"
-        @update:model-value="v => to = v ? $dayjs(v).toISOString() : null"
-        hide-details style="max-width: 170px;" />
+        hide-details
+        density="comfortable"
+        style="width: 170px"
+      />
 
-      <v-menu>
-        <template #activator="{ props }">
-          <v-btn v-bind="props" variant="tonal" prepend-icon="mdi-calendar">Rangos rápidos</v-btn>
-        </template>
-        <v-list>
-          <v-list-item v-for="p in presets" :key="p.label" @click="applyPreset(p)">
-            <v-list-item-title>{{ p.label }}</v-list-item-title>
-          </v-list-item>
-        </v-list>
-      </v-menu>
+        <v-text-field
+          label="Hasta"
+          type="date"
+          :model-value="to ? $dayjs(to).format('YYYY-MM-DD') : ''"
+          @update:model-value="v => to = v ? $dayjs(v).toISOString() : null"
+          hide-details
+          density="comfortable"
+          style="width: 170px"
+        />
 
-      <v-text-field class="ml-2" v-model="search" density="comfortable" variant="outlined"
-        prepend-inner-icon="mdi-magnify" placeholder="Buscar fecha o tipo" hide-details style="max-width: 240px;" />
+        <v-btn variant="tonal" prepend-icon="mdi-calendar">
+          Rangos rápidos
+          <v-menu activator="parent">
+            <v-list>
+              <v-list-item v-for="p in presets" :key="p.label" @click="applyPreset(p)">
+                <v-list-item-title>{{ p.label }}</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-menu>
+        </v-btn>
 
-      <v-btn class="ml-2" prepend-icon="mdi-download" color="primary" @click="exportCSV">CSV</v-btn>
-      <v-btn class="ml-2" prepend-icon="mdi-file-pdf-box" color="secondary" variant="tonal" @click="exportPDF">PDF</v-btn>
+        <v-text-field
+          v-model="search"
+          density="comfortable"
+          variant="outlined"
+          prepend-inner-icon="mdi-magnify"
+          placeholder="Buscar fecha o tipo"
+          hide-details
+          style="width: 240px"
+        />
+
+        <div class="grow"></div> <!-- empuja exportaciones a la derecha -->
+
+        <v-btn prepend-icon="mdi-download" color="primary" @click="exportCSV">CSV</v-btn>
+        <v-btn prepend-icon="mdi-file-pdf-box" color="secondary" variant="tonal" @click="exportPDF">PDF</v-btn>
+      </div>
     </template>
+
 
     <v-alert type="info" variant="tonal" density="compact" class="mb-4">
       Fórmula: <b>Promedio móvil</b>. Entrada actualiza costo promedio; salida valora a costo promedio vigente (COGS).
@@ -235,7 +266,8 @@ const exportPDF = () => {
       ]"
       :items="rows"
       item-key="fecha"
-      :items-per-page="10"
+      :items-per-page="15"
+      height="560"
       hover
       fixed-header
       class="rounded-xl"
