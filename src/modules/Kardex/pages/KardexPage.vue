@@ -4,6 +4,10 @@ import dayjs from 'dayjs'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import PageCard from '../../../components/PageCard.vue'
+
+// 👇 REGISTRO LOCAL del gráfico (usaremos <ApexChart/> en el template)
+import ApexChart from 'vue3-apexcharts'
+
 import { useProductsStore } from '../../products/stores/productsStore'
 import { useMovementsStore } from '../../movements/stores/movementsStore'
 import { buildKardex } from '../services/kardexService'
@@ -68,11 +72,9 @@ function applyPreset(p) {
   to.value = end
 }
 
-// ---------- GRÁFICO (ApexCharts) ----------
+// ---------- GRÁFICO ----------
 const chartSeries = computed(() => {
-  // Serie 1: Saldo de unidades (área)
   const s1 = rows.value.map(r => ({ x: dayjs(r.fecha).valueOf(), y: Number(r.saldoCant || 0) }))
-  // Serie 2: Costo promedio unitario (línea)
   const s2 = rows.value.map(r => ({ x: dayjs(r.fecha).valueOf(), y: Number(r.saldoCostUnit || 0) }))
   return [
     { name: 'Saldo (u)', type: 'area', data: s1 },
@@ -86,20 +88,10 @@ const chartOpts = computed(() => ({
   dataLabels: { enabled: false },
   xaxis: { type: 'datetime', labels: { datetimeUTC: false } },
   yaxis: [
-    {
-      title: { text: 'Saldo (unidades)' },
-      decimalsInFloat: 0,
-    },
-    {
-      opposite: true,
-      title: { text: 'Costo promedio (CU)' },
-      decimalsInFloat: 2,
-    }
+    { title: { text: 'Saldo (unidades)' }, decimalsInFloat: 0 },
+    { opposite: true, title: { text: 'Costo promedio (CU)' }, decimalsInFloat: 2 }
   ],
-  tooltip: {
-    shared: true,
-    x: { format: 'yyyy-MM-dd' },
-  },
+  tooltip: { shared: true, x: { format: 'yyyy-MM-dd' } },
   grid: { strokeDashArray: 3 },
 }))
 
@@ -143,7 +135,7 @@ const exportPDF = () => {
   const title = `Kardex Promedio - ${prodName}`
   doc.setFontSize(14)
   doc.text(title, 40, 40)
-  const rangeLine = `Rango: ${from.value?dayjs(from.value).format('YYYY-MM-DD'):'—'} a ${to.value?dayjs(to).format('YYYY-MM-DD'):'—'}`
+  const rangeLine = `Rango: ${from.value?dayjs(from.value).format('YYYY-MM-DD'):'—'} a ${to.value?dayjs(to.value).format('YYYY-MM-DD'):'—'}`
   doc.setFontSize(10)
   doc.text(rangeLine, 40, 58)
   doc.text(`Movimientos: ${kpis.value.totalMov}`, 40, 74)
@@ -168,7 +160,6 @@ const exportPDF = () => {
 
 <template>
   <PageCard>
-    <!-- Título + KPIs -->
     <template #title>
       <div class="d-flex align-center" style="gap:10px;">
         <v-icon color="primary">mdi-file-chart</v-icon>
@@ -188,7 +179,6 @@ const exportPDF = () => {
       </div>
     </template>
 
-    <!-- Acciones -->
     <template #actions>
       <v-select label="Producto" :items="productOptions" v-model="productId" style="min-width: 260px" hide-details />
       <v-text-field class="ml-2" label="Desde" type="date"
@@ -218,21 +208,31 @@ const exportPDF = () => {
       <v-btn class="ml-2" prepend-icon="mdi-file-pdf-box" color="secondary" variant="tonal" @click="exportPDF">PDF</v-btn>
     </template>
 
-    <!-- Nota -->
     <v-alert type="info" variant="tonal" density="compact" class="mb-4">
       Fórmula: <b>Promedio móvil</b>. Entrada actualiza costo promedio; salida valora a costo promedio vigente (COGS).
     </v-alert>
 
-    <!-- Gráfico -->
-    <v-card class="mb-4" elevation="1" rounded="xl">
+    <!-- Renderiza gráfico solo si hay datos -->
+    <v-card v-if="rows.length" class="mb-4" elevation="1" rounded="xl">
       <v-card-text>
-        <apexchart type="line" height="320" :options="chartOpts" :series="chartSeries" />
+        <ApexChart type="line" height="320" :options="chartOpts" :series="chartSeries" />
       </v-card-text>
     </v-card>
 
-    <!-- Tabla -->
     <v-data-table
-      :headers="headers"
+      :headers="[
+        { title:'Fecha', value:'fecha', width:110 },
+        { title:'Tipo', value:'tipo', width:110 },
+        { title:'Ent. Cant', value:'cantIn', align:'end', width:120 },
+        { title:'Ent. C.U.', value:'costIn', align:'end', width:120 },
+        { title:'Ent. Total', value:'totalIn', align:'end', width:140 },
+        { title:'Sal. Cant', value:'cantOut', align:'end', width:120 },
+        { title:'Sal. C.U.', value:'costOut', align:'end', width:120 },
+        { title:'Sal. Total', value:'totalOut', align:'end', width:140 },
+        { title:'Saldo Cant', value:'saldoCant', align:'end', width:130 },
+        { title:'Saldo C.U.', value:'saldoCostUnit', align:'end', width:120 },
+        { title:'Saldo Total', value:'saldoTotal', align:'end', width:140 }
+      ]"
       :items="rows"
       item-key="fecha"
       :items-per-page="10"
@@ -253,7 +253,6 @@ const exportPDF = () => {
         </v-chip>
       </template>
 
-      <!-- num align -->
       <template #item.cantIn="{ item }"><div class="text-right">{{ Number(item.cantIn || 0) }}</div></template>
       <template #item.costIn="{ item }"><div class="text-right">{{ Number(item.costIn || 0).toFixed(2) }}</div></template>
       <template #item.totalIn="{ item }"><div class="text-right">{{ Number(item.totalIn || 0).toFixed(2) }}</div></template>
