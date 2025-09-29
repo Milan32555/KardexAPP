@@ -5,13 +5,14 @@ import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import PageCard from '../../../components/PageCard.vue'
 
-// 👇 REGISTRO LOCAL del gráfico (usaremos <ApexChart/> en el template)
+// REGISTRO LOCAL del gráfico (<ApexChart/> en el template)
 import ApexChart from 'vue3-apexcharts'
 
 import { useProductsStore } from '../../products/stores/productsStore'
 import { useMovementsStore } from '../../movements/stores/movementsStore'
 import { buildKardex } from '../services/kardexService'
 
+const fmt = (iso) => iso ? dayjs(iso).format('YYYY-MM-DD') : ''
 const products = useProductsStore()
 const moves = useMovementsStore()
 
@@ -179,64 +180,64 @@ const exportPDF = () => {
       </div>
     </template>
 
-    <template #actions>
-      <div class="actions-row">
-        <v-select
-          label="Producto"
-          :items="productOptions"
-          v-model="productId"
-          hide-details
-          style="min-width: 260px"
-          density="comfortable"
-        />
+  <template #actions>
+  <div class="actions-row">
+    <v-select
+      label="Producto"
+      :items="productOptions"
+      v-model="productId"
+      hide-details
+      style="min-width: 260px"
+      density="comfortable"
+    />
 
-      <v-text-field
-        label="Desde"
-        type="date"
-        :model-value="from ? $dayjs(from).format('YYYY-MM-DD') : ''"
-        @update:model-value="v => from = v ? $dayjs(v).toISOString() : null"
-        hide-details
-        density="comfortable"
-        style="width: 170px"
-      />
+    <v-text-field
+      label="Desde"
+      type="date"
+      :model-value="from ? fmt(from) : ''"
+      @update:model-value="v => from = v ? dayjs(v).toISOString() : null"
+      hide-details
+      density="comfortable"
+      style="width: 170px"
+    />
 
-        <v-text-field
-          label="Hasta"
-          type="date"
-          :model-value="to ? $dayjs(to).format('YYYY-MM-DD') : ''"
-          @update:model-value="v => to = v ? $dayjs(v).toISOString() : null"
-          hide-details
-          density="comfortable"
-          style="width: 170px"
-        />
+    <v-text-field
+      label="Hasta"
+      type="date"
+      :model-value="to ? fmt(to) : ''"
+      @update:model-value="v => to = v ? dayjs(v).toISOString() : null"
+      hide-details
+      density="comfortable"
+      style="width: 170px"
+    />
 
-        <v-btn variant="tonal" prepend-icon="mdi-calendar">
-          Rangos rápidos
-          <v-menu activator="parent">
-            <v-list>
-              <v-list-item v-for="p in presets" :key="p.label" @click="applyPreset(p)">
-                <v-list-item-title>{{ p.label }}</v-list-item-title>
-              </v-list-item>
-            </v-list>
-          </v-menu>
-        </v-btn>
+    <v-btn variant="tonal" prepend-icon="mdi-calendar">
+      Rangos rápidos
+      <v-menu activator="parent">
+        <v-list>
+          <v-list-item v-for="p in presets" :key="p.label" @click="applyPreset(p)">
+            <v-list-item-title>{{ p.label }}</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
+    </v-btn>
 
-        <v-text-field
-          v-model="search"
-          density="comfortable"
-          variant="outlined"
-          prepend-inner-icon="mdi-magnify"
-          placeholder="Buscar fecha o tipo"
-          hide-details
-          style="width: 240px"
-        />
+    <v-text-field
+      v-model="search"
+      density="comfortable"
+      variant="outlined"
+      prepend-inner-icon="mdi-magnify"
+      placeholder="Buscar fecha o tipo"
+      hide-details
+      style="width: 240px"
+    />
 
-        <div class="grow"></div> <!-- empuja exportaciones a la derecha -->
+    <div class="grow"></div> <!-- empuja exportaciones a la derecha -->
 
-        <v-btn prepend-icon="mdi-download" color="primary" @click="exportCSV">CSV</v-btn>
-        <v-btn prepend-icon="mdi-file-pdf-box" color="secondary" variant="tonal" @click="exportPDF">PDF</v-btn>
-      </div>
-    </template>
+    <v-btn prepend-icon="mdi-download" color="primary" @click="exportCSV">CSV</v-btn>
+    <v-btn prepend-icon="mdi-file-pdf-box" color="secondary" variant="tonal" @click="exportPDF">PDF</v-btn>
+  </div>
+</template>
 
 
     <v-alert type="info" variant="tonal" density="compact" class="mb-4">
@@ -266,13 +267,12 @@ const exportPDF = () => {
       ]"
       :items="rows"
       item-key="fecha"
-      :items-per-page="15"
-      height="560"
+      :items-per-page="10"
       hover
       fixed-header
       class="rounded-xl"
     >
-      <template #item.fecha="{ item }">{{ $dayjs(item.fecha).format('YYYY-MM-DD') }}</template>
+      <template #item.fecha="{ item }">{{ fmt(item.fecha) }}</template>
 
       <template #item.tipo="{ item }">
         <v-chip
@@ -306,7 +306,3 @@ const exportPDF = () => {
   </PageCard>
 </template>
 
-<script>
-import dayjs from 'dayjs'
-export default { provide: { $dayjs: dayjs } }
-</script>

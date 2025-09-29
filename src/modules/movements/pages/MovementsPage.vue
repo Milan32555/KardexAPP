@@ -31,6 +31,11 @@ const productOptions = computed(() =>
   products.items.map(p => ({ title: p.nombre, value: p.id }))
 )
 
+// Mapa { id -> producto } para resolver nombres de forma robusta y eficiente
+const productsById = computed(() =>
+  Object.fromEntries(products.items.map(p => [p.id, p]))
+)
+
 // Tabla: headers
 const headers = [
   { title: 'Fecha', value: 'fecha', width: 110 },
@@ -41,11 +46,11 @@ const headers = [
   { title: 'Acciones', value: 'actions', sortable: false, align: 'end', width: 100 },
 ]
 
-// Items renderizables (con filtros y formato)
+// Items renderizables (con filtros y formato) usando productsById
 const items = computed(() => {
   const base = moves.items.map(m => ({
     ...m,
-    productName: products.items.find(p => p.id === m.productId)?.nombre ?? '—',
+    productName: productsById.value[m.productId]?.nombre ?? '—',
     fecha: dayjs(m.fecha).format('YYYY-MM-DD'),
   }))
 
@@ -58,8 +63,8 @@ const items = computed(() => {
   const q = search.value.trim().toLowerCase()
   if (q) {
     filtered = filtered.filter(i =>
-      i.productName.toLowerCase().includes(q) ||
-      i.tipo.toLowerCase().includes(q)
+      (i.productName || '').toLowerCase().includes(q) ||
+      (i.tipo || '').toLowerCase().includes(q)
     )
   }
 
