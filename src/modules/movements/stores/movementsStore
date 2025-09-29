@@ -1,0 +1,30 @@
+import { defineStore } from 'pinia'
+import dayjs from 'dayjs'
+import { load, save, uid } from '../../../utils/storage'
+
+export const useMovementsStore = defineStore('movements',
+     {
+  state: () => ({
+    items: load('movements', [
+      // dummy: entrada inicial para arrancar promedios
+      { id: uid('m'), productId: null, fecha: dayjs().subtract(10,'day').toISOString(), tipo:'entrada', cantidad: 100, costoUnit: 5.00 },
+    ]).filter(m => m.productId !== null), // limpiamos si quedó null del ejemplo
+  }),
+  getters: {
+    byProduct: (state) => (productId) =>
+      state.items.filter(m => m.productId === productId)
+                 .sort((a,b)=>new Date(a.fecha)-new Date(b.fecha)),
+  },
+  actions: {
+    add(mov) 
+    {
+      this.items.push({ id: uid('m'), ...mov })
+      save('movements', this.items)
+    },
+    remove(id) 
+    {
+      this.items = this.items.filter(m => m.id !== id)
+      save('movements', this.items)
+    },
+  }
+})

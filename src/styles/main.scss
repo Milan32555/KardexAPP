@@ -1,0 +1,10 @@
+@use 'vuetify/styles';
+
+:root {
+  --app-max-width: 1200px;
+}
+
+body {
+  background: #f6f8fb;
+  font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
